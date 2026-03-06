@@ -111,7 +111,7 @@ export default function ResultsScreen({ result, onActionPlan }) {
           Get My Action Plan <ArrowRight />
         </button>
         <p className="text-center text-xs text-muted mt-4 font-mono">
-          Powered by NightShift ML Engine
+          Powered by MindMetrics ML Engine
         </p>
       </div>
     </div>

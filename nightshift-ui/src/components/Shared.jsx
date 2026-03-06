@@ -44,7 +44,7 @@ export const Wordmark = ({ size = 'md' }) => {
   return (
     <div className={`flex items-center gap-2 font-sans font-semibold ${base}`}>
       <span className="text-accent text-lg leading-none select-none">●</span>
-      <span className="text-bright">NightShift</span>
+      <span className="text-bright">MindMetrics</span>
     </div>
   )
 }

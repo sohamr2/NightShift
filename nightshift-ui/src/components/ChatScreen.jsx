@@ -8,7 +8,7 @@ const getIntro = (depSev, anxSev) => {
     : "I'm here to help you build healthier digital habits."
   
   return [
-    `Hey, I'm Luna — your NightShift coach. 🌙`,
+    `Hey, I'm Luna — your MindMetrics coach. 🌙`,
     `I noticed your baseline shows **${depSev}** indicators for depression and **${anxSev}** for anxiety. ${note}`,
     `Ask me anything: how to improve your sleep hygiene, strategies to reduce screen time, or what to prioritize first.`
   ]
