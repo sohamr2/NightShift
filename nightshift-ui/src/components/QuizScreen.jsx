@@ -143,7 +143,7 @@ export default function QuizScreen({ onResult }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-16 enter" style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <StepCounter current={1} total={4} label="Step 2 of 5" />
+        <StepCounter current={1} total={4} label="Step 2 of 4" />
       </div>
 
       {/* Title */}

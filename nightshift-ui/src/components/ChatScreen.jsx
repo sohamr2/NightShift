@@ -99,7 +99,7 @@ export default function ChatScreen({ result, user }) {
         <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
           <Wordmark size="sm" />
           <div className="flex items-center gap-4">
-            <StepCounter current={3} total={4} label="Step 4 of 5" />
+            <StepCounter current={3} total={4} label="Step 4 of 4" />
             <span className="flex items-center gap-1.5 text-xs font-mono text-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               Luna online
