@@ -6,10 +6,10 @@
 # the saved pipeline files.
 # =============================================================================
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Union
+from typing import List, Union, Optional
 import joblib
 import pandas as pd
 import numpy as np
@@ -18,6 +18,14 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from sklearn.base import BaseEstimator, TransformerMixin
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
+from contextlib import asynccontextmanager
+
+from database import get_db, create_tables
+from models import Assessment
+from auth import router as auth_router, get_current_user, decode_jwt
+from models import User
 
 # ---------------------------------------------------------------------------
 # Custom scikit-learn transformer — MUST be present for joblib.load() to work
@@ -89,44 +97,17 @@ class DigitalStressEncoder(BaseEstimator, TransformerMixin):
 
 
 # ---------------------------------------------------------------------------
-# App & Middleware
+# Lifespan — DB init + ML model loading
 # ---------------------------------------------------------------------------
 
 load_dotenv()
 GOOGLE_API = os.environ.get("GOOGLE_API")
 gemini_client = genai.Client(api_key=GOOGLE_API)
 
-app = FastAPI(title="NightShift ML Engine")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-    ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ---------------------------------------------------------------------------
-# Load ML models on startup
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
 # Pickle compatibility patches — must run BEFORE joblib.load()
-# ---------------------------------------------------------------------------
-
-# 1) Models were pickled with __main__.DigitalStressEncoder; inject it so pickle
-#    can find the class regardless of how uvicorn loads this module.
 import __main__
 __main__.DigitalStressEncoder = DigitalStressEncoder
 
-# 2) _RemainderColsList is an internal sklearn class added in 1.5+. If the pkl
-#    was built with a version that serialised this class, we stub it out so
-#    older/newer installs can still load the pipeline cleanly.
 try:
     from sklearn.compose._column_transformer import _RemainderColsList  # noqa: F401
 except ImportError:
@@ -137,15 +118,58 @@ except ImportError:
             return (list, (list(self),))
     _ct_mod._RemainderColsList = _RemainderColsList
 
-print("Loading ML models into memory...")
-try:
-    classifier      = joblib.load("best_risk_classifier.pkl")
-    phq_regressor   = joblib.load("phq9_depression_regressor.pkl")
-    gad_regressor   = joblib.load("gad7_anxiety_regressor.pkl")
-    print("✅ Ensemble models loaded successfully!")
-except Exception as e:
-    print(f"❌ Error loading models: {e}")
-    classifier = phq_regressor = gad_regressor = None
+classifier = phq_regressor = gad_regressor = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: create DB tables + load ML models."""
+    # --- DB ---
+    print("🔄 Creating database tables...")
+    await create_tables()
+    print("✅ Database tables ready!")
+
+    # --- ML ---
+    global classifier, phq_regressor, gad_regressor
+    print("Loading ML models into memory...")
+    try:
+        classifier    = joblib.load("best_risk_classifier.pkl")
+        phq_regressor = joblib.load("phq9_depression_regressor.pkl")
+        gad_regressor = joblib.load("gad7_anxiety_regressor.pkl")
+        print("✅ Ensemble models loaded successfully!")
+    except Exception as e:
+        print(f"❌ Error loading models: {e}")
+        classifier = phq_regressor = gad_regressor = None
+
+    yield  # app runs here
+
+    # Shutdown (nothing needed)
+
+
+# ---------------------------------------------------------------------------
+# App & Middleware
+# ---------------------------------------------------------------------------
+
+app = FastAPI(title="NightShift ML Engine", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "https://night-shift-sandy.vercel.app",
+        "https://nightshift-s5rm.onrender.com",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount auth routes
+app.include_router(auth_router)
+
 
 # ---------------------------------------------------------------------------
 # Pydantic Schemas
@@ -177,16 +201,35 @@ class ChatRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# /predict — Ensemble inference endpoint
+# Helper: extract user from token (optional — doesn't 401 if missing)
+# ---------------------------------------------------------------------------
+
+async def _optional_user(request: Request, db: AsyncSession) -> Optional[User]:
+    """Try to get the logged-in user; return None if no valid token."""
+    from sqlalchemy import select
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ", 1)[1]
+    try:
+        claims = decode_jwt(token)
+    except Exception:
+        return None
+    user = (await db.execute(select(User).where(User.id == int(claims["sub"])))).scalar_one_or_none()
+    return user
+
+
+# ---------------------------------------------------------------------------
+# /predict — Ensemble inference endpoint (saves to DB if authenticated)
 # ---------------------------------------------------------------------------
 
 @app.post("/predict")
-async def get_predictions(user: UserProfile):
+async def get_predictions(user_profile: UserProfile, request: Request, db: AsyncSession = Depends(get_db)):
     if classifier is None or phq_regressor is None or gad_regressor is None:
         raise HTTPException(status_code=503, detail="ML models are not loaded. Check server logs.")
 
     try:
-        data = user.model_dump()
+        data = user_profile.model_dump()
 
         # Normalize Yes/No → 1/0 before sklearn sees the data
         _yes = {"yes", "1", "true"}
@@ -201,12 +244,37 @@ async def get_predictions(user: UserProfile):
         phq_score  = float(phq_regressor.predict(df)[0])
         gad_score  = float(gad_regressor.predict(df)[0])
 
-        return {
+        result = {
             "risk_probability": round(risk_prob, 4),
             "is_at_risk": risk_prob >= 0.5,
             "phq9_score": round(phq_score, 2),
             "gad7_score": round(gad_score, 2),
         }
+
+        # Save to DB if user is logged in
+        current_user = await _optional_user(request, db)
+        if current_user:
+            assessment = Assessment(
+                user_id=current_user.id,
+                age=data["Age"],
+                gender=data["Gender"],
+                primary_platform=data["Primary_Platform"],
+                daily_screen_time_hours=data["Daily_Screen_Time_Hours"],
+                sleep_duration_hours=data["Sleep_Duration_Hours"],
+                activity_type=data["Activity_Type"],
+                dominant_content_type=data["Dominant_Content_Type"],
+                user_archetype=data["User_Archetype"],
+                late_night_usage=bool(data["Late_Night_Usage"]),
+                social_comparison=bool(data["Social_Comparison_Trigger"]),
+                phq9_score=phq_score,
+                gad7_score=gad_score,
+                risk_probability=risk_prob,
+                is_at_risk=risk_prob >= 0.5,
+            )
+            db.add(assessment)
+            await db.commit()
+
+        return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -254,6 +322,159 @@ YOUR PERSONALITY & RULES:
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# /assessments/latest — Return the most recent assessment for the logged-in user
+# ---------------------------------------------------------------------------
+
+@app.get("/assessments/latest")
+async def get_latest_assessment(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = (await db.execute(
+        select(Assessment)
+        .where(Assessment.user_id == current_user.id)
+        .order_by(desc(Assessment.created_at))
+        .limit(1)
+    )).scalar_one_or_none()
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No assessments found")
+
+    return {
+        "phq9_score":       result.phq9_score,
+        "gad7_score":       result.gad7_score,
+        "risk_probability": result.risk_probability,
+        "is_at_risk":       result.is_at_risk,
+        "screen_time":      result.daily_screen_time_hours,
+        "sleep_hours":      result.sleep_duration_hours,
+        "late_night":       1 if result.late_night_usage else 0,
+        "activity_type":    result.activity_type,
+        "social_comparison": 1 if result.social_comparison else 0,
+    }
+
+
+# ---------------------------------------------------------------------------
+# /analytics — Dataset aggregations for the DV Dashboard
+# ---------------------------------------------------------------------------
+
+_analytics_df = None
+
+def _get_analytics_df():
+    global _analytics_df
+    if _analytics_df is None:
+        _analytics_df = pd.read_csv("social_media_mental_health.csv")
+        _analytics_df["combined_mh"] = _analytics_df["PHQ_9_Score"] + _analytics_df["GAD_7_Score"]
+        _analytics_df["screen_bucket"] = pd.cut(
+            _analytics_df["Daily_Screen_Time_Hours"],
+            bins=[0, 3, 6, 9, float("inf")],
+            labels=["Low", "Moderate", "High", "Very High"],
+        )
+        _analytics_df["sleep_bucket"] = pd.cut(
+            _analytics_df["Sleep_Duration_Hours"],
+            bins=[0, 5, 7, float("inf")],
+            labels=["Poor Sleep", "Moderate Sleep", "Healthy Sleep"],
+        )
+    return _analytics_df.copy()
+
+
+@app.get("/analytics")
+async def get_analytics(
+    gender: Optional[str] = None,
+    platform: Optional[str] = None,
+    activity_type: Optional[str] = None,
+    age_group: Optional[str] = None,
+):
+    df = _get_analytics_df()
+
+    if gender:
+        df = df[df["Gender"] == gender]
+    if platform:
+        df = df[df["Primary_Platform"] == platform]
+    if activity_type:
+        df = df[df["Activity_Type"] == activity_type]
+    if age_group:
+        if age_group == "Early College":
+            df = df[df["Age"] <= 20]
+        elif age_group == "Mid College":
+            df = df[(df["Age"] >= 21) & (df["Age"] <= 23)]
+        elif age_group == "Senior":
+            df = df[df["Age"] >= 24]
+
+    if df.empty:
+        return {"error": "No data for selected filters"}
+
+    kpis = {
+        "total_users": len(df),
+        "avg_screen_time": round(float(df["Daily_Screen_Time_Hours"].mean()), 2),
+        "avg_sleep": round(float(df["Sleep_Duration_Hours"].mean()), 2),
+        "avg_gad": round(float(df["GAD_7_Score"].mean()), 2),
+        "avg_phq": round(float(df["PHQ_9_Score"].mean()), 2),
+        "at_risk_pct": round(float(((df["PHQ_9_Score"] >= 10) | (df["GAD_7_Score"] >= 10)).mean()), 2),
+    }
+
+    gad_by_screen = (
+        df.groupby("screen_bucket", observed=True)["GAD_7_Score"]
+        .mean().round(2).reset_index()
+        .rename(columns={"screen_bucket": "bucket", "GAD_7_Score": "avg_gad"})
+        .to_dict(orient="records")
+    )
+
+    phq_by_sleep = (
+        df.groupby("sleep_bucket", observed=True)["PHQ_9_Score"]
+        .mean().round(2).reset_index()
+        .rename(columns={"sleep_bucket": "bucket", "PHQ_9_Score": "avg_phq"})
+        .to_dict(orient="records")
+    )
+
+    activity_split = (
+        df["Activity_Type"].value_counts().reset_index()
+        .rename(columns={"Activity_Type": "type", "count": "count"})
+        .to_dict(orient="records")
+    )
+
+    gad_by_late_night = (
+        df.groupby("Late_Night_Usage")["GAD_7_Score"]
+        .mean().round(2).reset_index()
+        .rename(columns={"Late_Night_Usage": "late_night", "GAD_7_Score": "avg_gad"})
+        .to_dict(orient="records")
+    )
+
+    phq_by_activity = (
+        df.groupby("Activity_Type")["PHQ_9_Score"]
+        .mean().round(2).reset_index()
+        .rename(columns={"Activity_Type": "activity", "PHQ_9_Score": "avg_phq"})
+        .to_dict(orient="records")
+    )
+
+    mh_by_social = (
+        df.groupby("Social_Comparison_Trigger")["combined_mh"]
+        .mean().round(2).reset_index()
+        .rename(columns={"Social_Comparison_Trigger": "social_comparison", "combined_mh": "avg_combined_mh"})
+        .to_dict(orient="records")
+    )
+
+    scatter = (
+        df[["Daily_Screen_Time_Hours", "combined_mh"]]
+        .sample(min(600, len(df)), random_state=42)
+        .round(2)
+        .rename(columns={"Daily_Screen_Time_Hours": "screen_time", "combined_mh": "combined_mh"})
+        .to_dict(orient="records")
+    )
+
+    return {
+        "kpis": kpis,
+        "gad_by_screen": gad_by_screen,
+        "phq_by_sleep": phq_by_sleep,
+        "activity_split": activity_split,
+        "gad_by_late_night": gad_by_late_night,
+        "phq_by_activity": phq_by_activity,
+        "mh_by_social": mh_by_social,
+        "scatter": scatter,
+    }
 
 
 # ---------------------------------------------------------------------------

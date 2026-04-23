@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Wordmark, StepCounter, SpinnerIcon, ArrowRight } from './Shared'
+import { predict } from '../api'
 
 const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'Twitter/X', 'LinkedIn', 'Facebook', 'Snapchat']
 
@@ -38,7 +39,7 @@ const Toggle = ({ value, onChange }) => (
       flexShrink: 0,
       outline: 'none',
       transition: 'background 0.2s',
-      background: value ? '#7C6DF0' : '#27272F',
+      background: value ? '#2563EB' : '#D1D5DB',
     }}
   >
     <span
@@ -122,15 +123,16 @@ export default function QuizScreen({ onResult }) {
     }
 
     try {
-      const res = await fetch('https://nightshift-s5rm.onrender.com/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const data = await predict(payload)
+      onResult({
+        ...data,
+        archetype:          form.archetype,
+        screen_time:        parseFloat(form.screenTime),
+        sleep_hours:        parseFloat(form.sleepDuration),
+        late_night:         form.lateNight ? 1 : 0,
+        activity_type:      form.activityType,
+        social_comparison:  form.socialComparison ? 1 : 0,
       })
-      if (!res.ok) throw new Error(`Server error ${res.status}`)
-      const data = await res.json()
-      // Pass archetype + archetype label back so ResultsScreen & ChatScreen can use it
-      onResult({ ...data, archetype: form.archetype })
     } catch (e) {
       setError(`API error: ${e.message}. Make sure the backend is running.`)
       setLoading(false)

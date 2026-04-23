@@ -51,7 +51,7 @@ export default function ResultsScreen({ result, onActionPlan }) {
         <div className={`flex flex-col p-5 rounded-2xl border ${depression.bg} ${depression.border}`}>
           <div className="flex items-center justify-between mb-8">
             <span className="text-sm font-medium text-text">Depression (PHQ-9)</span>
-            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-black/20 ${depression.color}`}>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-black/5 ${depression.color}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${depression.dot}`} />
               {depression.level}
             </span>
@@ -66,7 +66,7 @@ export default function ResultsScreen({ result, onActionPlan }) {
         <div className={`flex flex-col p-5 rounded-2xl border ${anxiety.bg} ${anxiety.border}`}>
           <div className="flex items-center justify-between mb-8">
             <span className="text-sm font-medium text-text">Anxiety (GAD-7)</span>
-            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-black/20 ${anxiety.color}`}>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold uppercase tracking-wider bg-black/5 ${anxiety.color}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${anxiety.dot}`} />
               {anxiety.level}
             </span>

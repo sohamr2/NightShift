@@ -15,7 +15,7 @@ export default function LandingScreen({ user, onStart }) {
         style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
         <span className="text-xs font-mono text-muted">
-          {user.email.split('@')[0]}
+          {user?.name || user?.email?.split('@')[0] || ''}
         </span>
       </nav>
 
@@ -39,7 +39,7 @@ export default function LandingScreen({ user, onStart }) {
 
         <p className="text-lg text-muted max-w-md leading-relaxed mb-10 enter"
           style={{ animationDelay: '130ms' }}>
-          Six questions. One AI analyst. A recovery plan built
+          One AI analyst. A recovery plan built
           around your exact archetype.
         </p>
 

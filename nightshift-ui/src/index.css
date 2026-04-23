@@ -12,82 +12,60 @@
   }
 
   body {
-    background-color: #09090B;
-    color: #E4E4EF;
+    background-color: #FFFFFF;
+    color: #1F2937;
     font-family: 'Figtree', system-ui, sans-serif;
     min-height: 100dvh;
-    background-image: radial-gradient(
-      ellipse 90% 40% at 50% -5%,
-      rgba(124, 109, 240, 0.08) 0%,
-      transparent 100%
-    );
-  }
-
-  /* Subtle grain — the hallmark of premium dark UIs */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   #root { position: relative; z-index: 1; }
 
   ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-track { background: #09090B; }
-  ::-webkit-scrollbar-thumb { background: #27272F; border-radius: 99px; }
+  ::-webkit-scrollbar-track { background: #F9FAFB; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
 }
 
 @layer components {
-  /* Base card */
   .card {
     @apply bg-surface rounded-2xl;
-    border: 1px solid #222228;
+    border: 1px solid #E5E7EB;
   }
 
-  /* Form input */
   .field {
     @apply w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200;
-    background-color: #09090B;
-    color: #E4E4EF;
-    border: 1px solid #222228;
+    background-color: #FFFFFF;
+    color: #1F2937;
+    border: 1px solid #E5E7EB;
     font-family: 'Figtree', system-ui, sans-serif;
   }
-  .field::placeholder { color: #6E6E80; }
-  .field:hover { border-color: #2E2E38; }
-  .field:focus { border-color: #7C6DF0; box-shadow: 0 0 0 3px rgba(124,109,240,0.18); }
+  .field::placeholder { color: #9CA3AF; }
+  .field:hover { border-color: #D1D5DB; }
+  .field:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-  /* Override browser autofill white flash */
   .field:-webkit-autofill,
   .field:-webkit-autofill:focus,
   .field:-webkit-autofill:hover {
-    -webkit-box-shadow: 0 0 0 1000px #09090B inset, 0 0 0 1px #222228;
-    -webkit-text-fill-color: #E4E4EF !important;
-    caret-color: #E4E4EF;
+    -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset, 0 0 0 1px #E5E7EB;
+    -webkit-text-fill-color: #1F2937 !important;
+    caret-color: #1F2937;
     transition: background-color 9999s ease-in-out;
   }
 
-  /* Select inherits field */
   select.field { cursor: pointer; }
 
-  /* Primary flat button */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
            text-sm font-semibold text-white transition-all duration-150
            active:scale-[0.98]
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
-    background-color: #7C6DF0;
+    background-color: #2563EB;
     font-family: 'Figtree', system-ui, sans-serif;
   }
-  .btn:hover:not(:disabled) { background-color: #917EF5; }
+  .btn:hover:not(:disabled) { background-color: #1D4ED8; }
 
-  /* Small caps label */
   .label {
     display: block;
-    color: #6E6E80;
+    color: #6B7280;
     font-size: 11px;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
@@ -95,14 +73,12 @@
     text-transform: uppercase;
   }
 
-  /* Hairline divider */
   .divider {
     height: 1px;
-    background-color: #222228;
+    background-color: #E5E7EB;
     border: none;
   }
 
-  /* Tag/badge */
   .tag {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md;
     font-size: 11px;
@@ -110,26 +86,24 @@
     font-weight: 500;
   }
 
-  /* Chat bubbles */
   .bubble-luna {
     @apply rounded-2xl px-4 py-3 text-sm leading-relaxed;
     max-width: 80%;
-    background-color: #18181F;
-    color: #E4E4EF;
-    border: 1px solid #222228;
+    background-color: #F3F4F6;
+    color: #1F2937;
+    border: 1px solid #E5E7EB;
     border-top-left-radius: 4px;
   }
 
   .bubble-user {
     @apply rounded-2xl px-4 py-3 text-sm leading-relaxed ml-auto;
     max-width: 80%;
-    background-color: #1D1A33;
-    color: #E4E4EF;
-    border: 1px solid #3D3566;
+    background-color: #EFF6FF;
+    color: #1F2937;
+    border: 1px solid #BFDBFE;
     border-top-right-radius: 4px;
   }
 
-  /* Entrance animation */
   .enter {
     opacity: 0;
     animation: rise 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;

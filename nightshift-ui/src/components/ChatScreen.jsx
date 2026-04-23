@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Wordmark, StepCounter, SendIcon, LunaAvatar, UserAvatar, TypingDots } from './Shared'
 import { getDepressionSeverity, getAnxietySeverity } from './ResultsScreen'
+import { chat } from '../api'
 
 const getIntro = (depSev, anxSev) => {
   const note = (depSev === 'Severe' || anxSev === 'Severe')
@@ -65,18 +66,12 @@ export default function ChatScreen({ result, user }) {
     const history = [...messages, userMsg]
 
     try {
-      const res = await fetch('https://nightshift-s5rm.onrender.com/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          depression_severity: depSev,
-          anxiety_severity: anxSev,
-          history: history.map(m => ({ role: m.role, text: m.text })),
-          message: text,
-        }),
+      const data = await chat({
+        depression_severity: depSev,
+        anxiety_severity: anxSev,
+        history: history.map(m => ({ role: m.role, text: m.text })),
+        message: text,
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
       setMessages(m => [...m, { role: 'luna', text: data.reply }])
     } catch (e) {
       setError(`Luna couldn't respond: ${e.message}`)
