@@ -24,7 +24,7 @@ const parseText = (text) => {
   )
 }
 
-export default function ChatScreen({ result, user }) {
+export default function ChatScreen({ result, user, onLogout }) {
   const { phq9_score, gad7_score } = result
   
   const depSev = getDepressionSeverity(phq9_score).level
@@ -99,6 +99,7 @@ export default function ChatScreen({ result, user }) {
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               Luna online
             </span>
+            <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors ml-2">Logout</button>
           </div>
         </div>
       </header>

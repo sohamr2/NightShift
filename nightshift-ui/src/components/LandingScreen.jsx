@@ -6,7 +6,7 @@ const stats = [
   { value: '8min', label: 'to your personalized plan' },
 ]
 
-export default function LandingScreen({ user, onStart }) {
+export default function LandingScreen({ user, onStart, onLogout }) {
   return (
     <div className="min-h-dvh flex flex-col px-6 py-8 max-w-3xl mx-auto">
 
@@ -14,9 +14,12 @@ export default function LandingScreen({ user, onStart }) {
       <nav className="flex items-center justify-between mb-20 enter"
         style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <span className="text-xs font-mono text-muted">
-          {user?.name || user?.email?.split('@')[0] || ''}
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-xs font-mono text-muted">
+            {user?.name || user?.email?.split('@')[0] || ''}
+          </span>
+          <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors">Logout</button>
+        </div>
       </nav>
 
       {/* Hero */}

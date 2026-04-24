@@ -80,7 +80,7 @@ const ChipGroup = ({ options, value, onChange }) => (
   </div>
 )
 
-export default function QuizScreen({ onResult }) {
+export default function QuizScreen({ onResult, onLogout }) {
   const [form, setForm] = useState({
     age: '', gender: '', screenTime: '', sleepDuration: '',
     platform: '', activityType: '', contentType: '',
@@ -145,7 +145,10 @@ export default function QuizScreen({ onResult }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-16 enter" style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <StepCounter current={1} total={4} label="Step 2 of 4" />
+        <div className="flex items-center gap-6">
+          <StepCounter current={1} total={4} label="Step 2 of 4" />
+          <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors">Logout</button>
+        </div>
       </div>
 
       {/* Title */}

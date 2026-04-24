@@ -107,12 +107,14 @@ export default function App() {
         <LandingScreen
           user={user}
           onStart={() => goTo(2)}
+          onLogout={handleLogout}
         />
       )}
 
       {step === 2 && (
         <QuizScreen
           onResult={(r) => { setResult(r); goTo(3) }}
+          onLogout={handleLogout}
         />
       )}
 
@@ -120,6 +122,7 @@ export default function App() {
         <ResultsScreen
           result={result}
           onActionPlan={() => goTo(4)}
+          onLogout={handleLogout}
         />
       )}
 
@@ -128,6 +131,7 @@ export default function App() {
           userAssessment={result}
           onNext={() => goTo(5)}
           onRetest={() => goTo(2)}
+          onLogout={handleLogout}
         />
       )}
 
@@ -135,6 +139,7 @@ export default function App() {
         <ChatScreen
           result={result}
           user={user}
+          onLogout={handleLogout}
         />
       )}
     </div>
