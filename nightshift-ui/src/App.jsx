@@ -127,6 +127,7 @@ export default function App() {
         <DashboardScreen
           userAssessment={result}
           onNext={() => goTo(5)}
+          onRetest={() => goTo(2)}
         />
       )}
 
