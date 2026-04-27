@@ -229,16 +229,13 @@ export default function DashboardScreen({ userAssessment, onNext, onRetest, onLo
     }}>
 
       {/* ── Top bar ── */}
-      <header style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 1.5rem', height: 56, borderBottom: `1px solid ${C.border}`,
-        background: `${C.bg}CC`, backdropFilter: 'blur(12px)',
-        position: 'sticky', top: 0, zIndex: 10, flexShrink: 0,
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-3 sm:py-0 sm:h-14 gap-3 sm:gap-0 sticky top-0 z-10 border-b backdrop-blur-md shrink-0 w-full overflow-hidden" style={{
+        background: `${C.bg}CC`, borderColor: C.border
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-5">
           <div>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: C.text }}>Population Insights</span>
-            <span style={{ fontSize: '0.72rem', color: C.muted, marginLeft: 10 }}>8,000 users · social media & mental health</span>
+            <span className="hidden md:inline" style={{ fontSize: '0.72rem', color: C.muted, marginLeft: 10 }}>8,000 users · social media & mental health</span>
           </div>
           {activeFilters > 0 && (
             <div style={{
@@ -249,49 +246,52 @@ export default function DashboardScreen({ userAssessment, onNext, onRetest, onLo
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
           {u && (
-            <div style={{ display: 'flex', gap: 14 }}>
+            <div className="hidden lg:flex gap-3">
               <LegendDot color={C.blue} label="Dataset" />
               <LegendDot color={C.red}  label="You" />
             </div>
           )}
-          {onRetest && (
-            <button onClick={onRetest} style={{
+          <div className="flex items-center gap-2 sm:gap-4">
+            {onRetest && (
+              <button onClick={onRetest} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '0.45rem 0.75rem', borderRadius: 10, fontSize: '0.8rem', fontWeight: 600,
+                cursor: 'pointer',
+                background: '#F9FAFB', color: C.text, border: `1px solid ${C.border}`,
+                fontFamily: '"Figtree", system-ui, sans-serif', transition: 'all 0.15s ease',
+              }}
+              onMouseOver={e => e.currentTarget.style.background = '#F3F4F6'}
+              onMouseOut={e => e.currentTarget.style.background = '#F9FAFB'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                <span className="hidden sm:inline">Retest</span>
+              </button>
+            )}
+            <button onClick={onNext} style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              padding: '0.45rem 1rem', borderRadius: 10, fontSize: '0.8rem', fontWeight: 600,
-              cursor: 'pointer',
-              background: '#F9FAFB', color: C.text, border: `1px solid ${C.border}`,
-              fontFamily: '"Figtree", system-ui, sans-serif', transition: 'all 0.15s ease',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#F3F4F6'}
-            onMouseOut={e => e.currentTarget.style.background = '#F9FAFB'}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-              Retest
+              padding: '0.45rem 0.75rem', borderRadius: 10, fontSize: '0.8rem', fontWeight: 600,
+              cursor: 'pointer', border: 'none',
+              background: '#2563EB',
+              color: '#fff', fontFamily: '"Figtree", system-ui, sans-serif',
+              boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
+              whiteSpace: 'nowrap'
+            }}>
+              Talk to Luna
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-          )}
-          <button onClick={onNext} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '0.45rem 1rem', borderRadius: 10, fontSize: '0.8rem', fontWeight: 600,
-            cursor: 'pointer', border: 'none',
-            background: '#2563EB',
-            color: '#fff', fontFamily: '"Figtree", system-ui, sans-serif',
-            boxShadow: '0 2px 8px rgba(37,99,235,0.25)',
-          }}>
-            Talk to Luna
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-          {onLogout && (
-            <button onClick={onLogout} style={{
-              fontSize: '0.8rem', color: C.muted, background: 'none', border: 'none', cursor: 'pointer', outline: 'none', fontFamily: '"Figtree", system-ui, sans-serif', transition: 'color 0.15s'
-            }} onMouseOver={e=>e.currentTarget.style.color=C.text} onMouseOut={e=>e.currentTarget.style.color=C.muted}>
-              Logout
-            </button>
-          )}
+            {onLogout && (
+              <button onClick={onLogout} style={{
+                fontSize: '0.8rem', color: C.muted, background: 'none', border: 'none', cursor: 'pointer', outline: 'none', fontFamily: '"Figtree", system-ui, sans-serif', transition: 'color 0.15s', whiteSpace: 'nowrap'
+              }} onMouseOver={e=>e.currentTarget.style.color=C.text} onMouseOut={e=>e.currentTarget.style.color=C.muted}>
+                Logout
+              </button>
+            )}
+          </div>
         </div>
       </header>
 

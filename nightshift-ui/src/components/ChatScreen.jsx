@@ -91,21 +91,21 @@ export default function ChatScreen({ result, user, onLogout }) {
       {/* Fixed top bar */}
       <header className="fixed top-0 left-0 right-0 z-20 bg-bg/90 backdrop-blur-md
                          border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-2 sm:py-0 sm:h-14 flex flex-wrap items-center justify-between gap-2">
           <Wordmark size="sm" />
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <StepCounter current={3} total={4} label="Step 4 of 4" />
             <span className="flex items-center gap-1.5 text-xs font-mono text-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               Luna online
             </span>
-            <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors ml-2">Logout</button>
+            <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors sm:ml-2">Logout</button>
           </div>
         </div>
       </header>
 
       {/* Messages */}
-      <main className="flex-1 overflow-y-auto pt-20 pb-32 px-4">
+      <main className="flex-1 overflow-y-auto pt-24 pb-32 px-4">
         <div className="max-w-2xl mx-auto flex flex-col gap-4 py-6">
           {messages.map((msg, i) => (
             <div

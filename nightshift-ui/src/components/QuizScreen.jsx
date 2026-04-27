@@ -143,9 +143,9 @@ export default function QuizScreen({ onResult, onLogout }) {
     <div className="min-h-dvh flex flex-col px-6 py-8 max-w-2xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-16 enter" style={{ animationDelay: '0ms' }}>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-10 sm:mb-16 enter" style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           <StepCounter current={1} total={4} label="Step 2 of 4" />
           <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors">Logout</button>
         </div>
@@ -163,7 +163,7 @@ export default function QuizScreen({ onResult, onLogout }) {
       <div className="flex flex-col gap-7 enter" style={{ animationDelay: '100ms' }}>
 
         {/* Row 1: Age + Gender */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="q-age" className="label">Age</label>
             <input id="q-age" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="e.g. 24"
@@ -181,7 +181,7 @@ export default function QuizScreen({ onResult, onLogout }) {
         </div>
 
         {/* Row 2: Screen time + Sleep */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="q-screen" className="label">Daily Screen Time (hrs)</label>
             <input id="q-screen" type="text" inputMode="decimal" pattern="[0-9.]*" placeholder="e.g. 6.5"

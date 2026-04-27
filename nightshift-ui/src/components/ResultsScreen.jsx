@@ -2,13 +2,13 @@ import { Wordmark, StepCounter, ArrowRight, CheckIcon } from './Shared'
 
 export const getDepressionSeverity = (score) => {
   if (score <= 9) return { level: 'Mild', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20', dot: 'bg-success' }
-  if (score <= 18) return { level: 'Moderate', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', dot: 'bg-warning' }
+  if (score <= 14) return { level: 'Moderate', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', dot: 'bg-warning' }
   return { level: 'Severe', color: 'text-danger', bg: 'bg-danger/10', border: 'border-danger/20', dot: 'bg-danger' }
 }
 
 export const getAnxietySeverity = (score) => {
-  if (score <= 7) return { level: 'Mild', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20', dot: 'bg-success' }
-  if (score <= 15) return { level: 'Moderate', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', dot: 'bg-warning' }
+  if (score <= 9) return { level: 'Mild', color: 'text-success', bg: 'bg-success/10', border: 'border-success/20', dot: 'bg-success' }
+  if (score <= 14) return { level: 'Moderate', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', dot: 'bg-warning' }
   return { level: 'Severe', color: 'text-danger', bg: 'bg-danger/10', border: 'border-danger/20', dot: 'bg-danger' }
 }
 
@@ -21,9 +21,9 @@ export default function ResultsScreen({ result, onActionPlan, onLogout }) {
   return (
     <div className="min-h-dvh flex flex-col px-6 py-8 max-w-xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-16 enter" style={{ animationDelay: '0ms' }}>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-10 sm:mb-16 enter" style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           <StepCounter current={2} total={4} label="Step 3 of 4" />
           <button onClick={onLogout} className="text-xs font-mono text-muted hover:text-text transition-colors">Logout</button>
         </div>
@@ -60,8 +60,8 @@ export default function ResultsScreen({ result, onActionPlan, onLogout }) {
             </span>
           </div>
           <div>
-            <span className="text-4xl font-serif text-bright">{phq9_score.toFixed(1)}</span>
-            <span className="text-sm text-muted font-mono ml-2">/ 27</span>
+            <span className="text-4xl font-serif text-bright">{Math.round((phq9_score / 27) * 100)}</span>
+            <span className="text-sm text-muted font-mono ml-1">%</span>
           </div>
         </div>
 
@@ -75,8 +75,8 @@ export default function ResultsScreen({ result, onActionPlan, onLogout }) {
             </span>
           </div>
           <div>
-            <span className="text-4xl font-serif text-bright">{gad7_score.toFixed(1)}</span>
-            <span className="text-sm text-muted font-mono ml-2">/ 21</span>
+            <span className="text-4xl font-serif text-bright">{Math.round((gad7_score / 21) * 100)}</span>
+            <span className="text-sm text-muted font-mono ml-1">%</span>
           </div>
         </div>
 

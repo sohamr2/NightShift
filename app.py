@@ -125,9 +125,9 @@ classifier = phq_regressor = gad_regressor = None
 async def lifespan(app: FastAPI):
     """Startup: create DB tables + load ML models."""
     # --- DB ---
-    print("🔄 Creating database tables...")
+    print("Creating database tables...")
     await create_tables()
-    print("✅ Database tables ready!")
+    print("Database tables ready!")
 
     # --- ML ---
     global classifier, phq_regressor, gad_regressor
@@ -136,9 +136,9 @@ async def lifespan(app: FastAPI):
         classifier    = joblib.load("best_risk_classifier.pkl")
         phq_regressor = joblib.load("phq9_depression_regressor.pkl")
         gad_regressor = joblib.load("gad7_anxiety_regressor.pkl")
-        print("✅ Ensemble models loaded successfully!")
+        print("Ensemble models loaded successfully!")
     except Exception as e:
-        print(f"❌ Error loading models: {e}")
+        print(f"Error loading models: {e}")
         classifier = phq_regressor = gad_regressor = None
 
     yield  # app runs here

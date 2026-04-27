@@ -11,10 +11,10 @@ export default function LandingScreen({ user, onStart, onLogout }) {
     <div className="min-h-dvh flex flex-col px-6 py-8 max-w-3xl mx-auto">
 
       {/* Top nav */}
-      <nav className="flex items-center justify-between mb-20 enter"
+      <nav className="flex flex-wrap items-center justify-between gap-4 mb-20 enter"
         style={{ animationDelay: '0ms' }}>
         <Wordmark size="sm" />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <span className="text-xs font-mono text-muted">
             {user?.name || user?.email?.split('@')[0] || ''}
           </span>
@@ -50,7 +50,7 @@ export default function LandingScreen({ user, onStart, onLogout }) {
           <button
             id="landing-start"
             onClick={onStart}
-            className="btn text-base px-8 py-4"
+            className="btn text-base px-8 py-4 w-full sm:w-auto"
           >
             Start Assessment <ArrowRight size={18} />
           </button>
@@ -60,7 +60,7 @@ export default function LandingScreen({ user, onStart, onLogout }) {
       {/* Stats row */}
       <div className="mt-20 enter" style={{ animationDelay: '220ms' }}>
         <div className="divider mb-8" />
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {stats.map((s, i) => (
             <div key={i}>
               <p className="text-2xl font-serif text-bright mb-1">{s.value}</p>
