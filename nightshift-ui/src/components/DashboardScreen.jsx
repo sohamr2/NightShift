@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
   PieChart, Pie, Cell, ScatterChart, Scatter, CartesianGrid, Legend,
+  ComposedChart, Line
 } from 'recharts'
 import { fetchAnalytics } from '../api'
 
@@ -36,6 +37,36 @@ function sleepBucket(h) {
   if (h < 5) return 'Poor Sleep'
   if (h < 7) return 'Moderate Sleep'
   return 'Healthy Sleep'
+}
+
+// ── Trendline Calculation ──────────────────────────────────────────────────
+function getTrendlineData(scatterData) {
+  if (!scatterData || scatterData.length === 0) return [];
+  const n = scatterData.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  
+  scatterData.forEach(p => {
+    const x = p.screen_time;
+    const y = p.combined_mh;
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  });
+  
+  const denominator = (n * sumX2 - sumX * sumX);
+  if (denominator === 0) return [];
+  
+  const m = (n * sumXY - sumX * sumY) / denominator;
+  const b = (sumY - m * sumX) / n;
+  
+  const minX = Math.min(...scatterData.map(d => d.screen_time));
+  const maxX = Math.max(...scatterData.map(d => d.screen_time));
+  
+  return [
+    { screen_time: minX, trend_y: m * minX + b },
+    { screen_time: maxX, trend_y: m * maxX + b }
+  ];
 }
 
 // ── Custom Tooltip ─────────────────────────────────────────────────────────
@@ -321,7 +352,7 @@ export default function DashboardScreen({ userAssessment, onNext, onRetest, onLo
                 subtitle="Each dot is a user · PHQ-9 + GAD-7 combined"
               />
               <ResponsiveContainer width="100%" height={300}>
-                <ScatterChart margin={{ left: 4, right: 24, top: 4, bottom: 44 }}>
+                <ComposedChart margin={{ left: 4, right: 24, top: 4, bottom: 44 }}>
                   <defs>
                     <radialGradient id="scatterGrad" cx="50%" cy="50%" r="50%">
                       <stop offset="0%" stopColor={C.blue} stopOpacity={0.8} />
@@ -335,21 +366,24 @@ export default function DashboardScreen({ userAssessment, onNext, onRetest, onLo
                   <YAxis dataKey="combined_mh" name="MH Score" type="number" {...axisProps} />
                   <Tooltip content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
-                    const d = payload[0]?.payload
+                    const d = payload.find(p => p.name === 'Dataset users' || p.name === 'You')?.payload || payload[0]?.payload
                     return (
                       <div style={{
                         background: '#FFFFFF', border: `1px solid ${C.border}`,
                         borderRadius: 10, padding: '10px 14px',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                       }}>
-                        <div style={{ fontSize: 11, color: C.text, fontWeight: 600 }}>Screen: {d?.screen_time}h</div>
-                        <div style={{ fontSize: 11, color: C.muted }}>MH Score: {d?.combined_mh}</div>
+                        <div style={{ fontSize: 11, color: C.text, fontWeight: 600 }}>Screen: {d?.screen_time?.toFixed?.(1) || d?.screen_time}h</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>MH Score: {d?.combined_mh?.toFixed?.(1) || d?.trend_y?.toFixed?.(1) || d?.combined_mh}</div>
                       </div>
                     )
                   }} cursor={{ strokeDasharray: '3 3' }} />
                   <Legend iconType="circle" iconSize={8}
                     formatter={v => <span style={{ fontSize: 11, color: C.muted }}>{v}</span>} />
                   <Scatter name="Dataset users" data={data.scatter} fill={C.blue} fillOpacity={0.35} />
+                  {data?.scatter && getTrendlineData(data.scatter).length > 0 && (
+                    <Line data={getTrendlineData(data.scatter)} dataKey="trend_y" name="Trendline" stroke="#111827" strokeWidth={2} dot={false} activeDot={false} legendType="plainline" strokeDasharray="5 5" />
+                  )}
                   {u?.screen_time != null && userCombinedMH != null && (
                     <Scatter
                       name="You"
@@ -366,7 +400,7 @@ export default function DashboardScreen({ userAssessment, onNext, onRetest, onLo
                       }}
                     />
                   )}
-                </ScatterChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </Card>
 
